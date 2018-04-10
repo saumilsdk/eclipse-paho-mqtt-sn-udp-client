@@ -23,6 +23,8 @@ package org.eclipse.paho.mqttsn.udpclient.messages.mqttsn;
  */
 public class MqttsDisconnect extends MqttsMessage {
 
+	private short sleepDuration;
+
 	/**
 	 * MqttsDisconnect constructor.Sets the appropriate message type. 
 	 */
@@ -38,6 +40,11 @@ public class MqttsDisconnect extends MqttsMessage {
 	public MqttsDisconnect(byte[] data) {
 		msgType = MqttsMessage.DISCONNECT;
 	}
+
+	public MqttsDisconnect(short sleepDuration) {
+		msgType = MqttsMessage.DISCONNECT;
+		this.sleepDuration = sleepDuration;
+	}
 	
 	/**
 	 * Method to convert this message to a byte array for transmission.
@@ -45,9 +52,14 @@ public class MqttsDisconnect extends MqttsMessage {
 	 */	
 	public byte[] toBytes() {
 		int length = 2;
+		if (sleepDuration > 0) length = 4;
 		byte[] data = new byte[length];
 		data[0] = (byte)length;
-		data[1] = (byte)msgType;		
+		data[1] = (byte)msgType;
+		if (sleepDuration > 0) {
+			data[2] = (byte) ((sleepDuration >> 8) & 0xFF);
+			data[3] = (byte) (sleepDuration & 0xFF);
+		}
 		return data;
 	}
 }

@@ -225,7 +225,7 @@ public class MqttsClient implements Runnable{
 	public boolean disconnect(){
 	
 		MqttsDisconnect msg = new MqttsDisconnect();
-	
+
 		switch (this.clState) {
 		case NOT_ACTIVE:
 		case WAITING_CONNECT:
@@ -256,6 +256,14 @@ public class MqttsClient implements Runnable{
 			break;
 		}  	
 		return true;
+	}
+
+	public void disconnect(short sleepingTime) {
+		switch (this.clState) {
+			case READY:
+			case WAITING_ACK:
+				udpInterface.sendMsg(new MqttsDisconnect(sleepingTime));
+		}
 	}
 
 	public boolean publish(int topicId, byte[] message, int qos, boolean retain){
