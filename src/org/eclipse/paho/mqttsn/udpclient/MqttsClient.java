@@ -507,7 +507,7 @@ public class MqttsClient implements Runnable{
 	/**                      HANDLING OF MQTTS MESSAGES                                     **/
 	/****************************************************************************************/
 
-	private void handleMqttsMessage(MqttsMessage receivedMsg){	
+	protected void handleMqttsMessage(MqttsMessage receivedMsg){
 		
 		if (clState == ClientState.NOT_ACTIVE) {
 			ClientLogger.log(ClientLogger.WARN, "Client not started yet, received msg ingored."); 
