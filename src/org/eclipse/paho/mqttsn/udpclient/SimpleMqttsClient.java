@@ -62,6 +62,18 @@ public class SimpleMqttsClient implements MqttsCallbackPreDefinedTopicId {
 		this.callback = callback;
 	}
 
+	public void sleep(int maxDuration) {
+		client.sleep(maxDuration);
+	}
+
+	public void wakeupForNewMessages() {
+		client.wakeupForNewMessages();
+	}
+
+	public void stopSleep() {
+		connect(client.getClientid(), true, client.getClientParameters().getKeepAlivePeriod());
+	}
+
 	public void connect() {
 		connect("" + System.currentTimeMillis());
 	}
@@ -126,6 +138,11 @@ public class SimpleMqttsClient implements MqttsCallbackPreDefinedTopicId {
 			notifyAll();
 		}
 		callback.disconnected(returnCode);
+	}
+
+	public void disconnect(short sleepDuration) {
+		client.disconnect(sleepDuration);
+		connected = false;
 	}
 
 	// TODO: not safe for use with multiple threads!
