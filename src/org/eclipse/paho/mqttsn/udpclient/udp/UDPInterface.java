@@ -145,7 +145,6 @@ public class UDPInterface implements Runnable {
     }
   }
 
-
   public void decodeMsg(byte[] data) {
     MqttsMessage mqttsMsg = null;
 
@@ -171,22 +170,22 @@ public class UDPInterface implements Runnable {
 
     }
 
-    if ((data[0] & 0xFF) < clientParms.getMinMqttsLength()) {
+    if (MqttsMessage.getLength(data) < clientParms.getMinMqttsLength()) {
       ClientLogger.log(ClientLogger.WARN,
-          "UDPInterface - Not a valid Mqtts message. Field \"Length\" (" + (data[0] & 0xFF)
+          "UDPInterface - Not a valid Mqtts message. Field \"Length\" (" + (MqttsMessage.getLength(data))
               + ") in the received data packet is less than " + clientParms.getMinMqttsLength()
               + " . The packet cannot be processed.");
       return;
     }
 
-    if ((data[0] & 0xFF) != data.length) {
+    if (MqttsMessage.getLength(data) != data.length) {
       ClientLogger.log(ClientLogger.WARN,
           "UDPInterface - Not a valid Mqtts message. Field \"Length\" in the received data packet does not match the actual length of the packet. The packet cannot be processed. "
               + data[0] + ", " + data.length);
       return;
     }
 
-    int msgType = (data[1] & 0xFF);
+    int msgType = data[0] == 1 ? data[3] & 0xFF : data[1] & 0xFF;
     switch (msgType) {
       case MqttsMessage.ADVERTISE:
         if (data.length != 5) {

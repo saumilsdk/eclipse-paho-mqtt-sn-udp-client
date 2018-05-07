@@ -152,7 +152,7 @@ public class MqttsClient implements Runnable {
 
   public MqttsClient(String gatewayAddress, int gatewayPort) {
     this(gatewayAddress, gatewayPort,
-        256,    //max mqtts message length
+        65536,    //max mqtts message length
         2,      //min mqtts message length
         2,      //max number retries
         5,      //ack waiting time
@@ -161,7 +161,7 @@ public class MqttsClient implements Runnable {
 
   public MqttsClient(String gatewayAddress, int gatewayPort, boolean auto) {
     this(gatewayAddress, gatewayPort,
-        256,    //max mqtts message length
+        65536,    //max mqtts message length
         2,      //min mqtts message length
         2,      //max number retries
         5,      //ack waiting time

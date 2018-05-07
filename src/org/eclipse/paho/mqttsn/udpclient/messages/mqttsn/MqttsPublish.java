@@ -56,16 +56,18 @@ public class MqttsPublish extends MqttsMessage {
 	 * @param data: The buffer that contains the PUBLISH message.
 	 */
 	public MqttsPublish(byte[] data) {
+		int headerLength = data[0] == 0x01 ? 9 : 7;
+		int length = getLength(data);
 		msgType = MqttsMessage.PUBLISH;
-		dup = ((data[2] & 0x80) >> 7 != 0);
-		qos = (data[2] & 0x60) >> 5;
+		dup = ((data[headerLength - 5] & 0x80) >> 7 != 0);
+		qos = (data[headerLength - 5] & 0x60) >> 5;
 		if(qos == 3) qos = -1;
-		retain = ((data[2] & 0x10) >> 4 != 0);
-		topicIdType = (data[2] & 0x03);		
+		retain = ((data[headerLength - 5] & 0x10) >> 4 != 0);
+		topicIdType = (data[headerLength - 5] & 0x03);
 		
 		byteTopicId = new byte[2];
-		byteTopicId[0] = data[3];
-		byteTopicId[1] = data[4];
+		byteTopicId[0] = data[headerLength - 4];
+		byteTopicId[1] = data[headerLength - 3];
 		
 		try {
 			if (topicIdType == MqttsMessage.SHORT_TOPIC_NAME)
@@ -77,10 +79,9 @@ public class MqttsPublish extends MqttsMessage {
 			e.printStackTrace();
 		}
 
-		msgId   = ((data[5] & 0xFF) << 8) + (data[6] & 0xFF);
-		int plength = (data[0] & 0xFF) - 7;
-		pubData = new byte[plength];
-		System.arraycopy(data, 7, pubData, 0, plength);				
+		msgId   = ((data[headerLength - 2] & 0xFF) << 8) + (data[headerLength - 1] & 0xFF);
+		pubData = new byte[length - headerLength];
+		System.arraycopy(data, headerLength, pubData, 0, length - headerLength);
 	}
 	
 	/**
@@ -91,11 +92,11 @@ public class MqttsPublish extends MqttsMessage {
 		int flags = 0;
 		if(dup) {
 			flags |= 0x80;
-		}		
+		}
 		if(qos == -1) {
 			flags |= 0x60;
 		} else if(qos == 0) {
-		
+
 		} else if(qos == 1) {
 			flags |= 0x20;
 		} else if(qos == 2) {
@@ -103,9 +104,11 @@ public class MqttsPublish extends MqttsMessage {
 		} else {
 			throw new IllegalArgumentException("Unknown QoS value: " + qos);
 		}
+
 		if(retain) {
 			flags |= 0x10;
 		}
+
 		if(topicIdType == MqttsMessage.NORMAL_TOPIC_ID){
 			//do nothing
 		}else if (topicIdType == MqttsMessage.PREDIFINED_TOPIC_ID){
@@ -115,25 +118,25 @@ public class MqttsPublish extends MqttsMessage {
 		}else {
 			throw new IllegalArgumentException("Unknown topic id type: " + topicIdType);
 		}
-				
-		int length = 7 + pubData.length;
-		byte[] data = new byte[length];
-		data[0] = (byte)length;   
-		data[1] = (byte)msgType;
-		data[2] = (byte)flags; 
-		
+
+		int headerLength = pubData.length + 7 > 255 ? 9 : 7;
+		int length = pubData.length + headerLength;
+		byte[] data = setLength(new byte[length], length);
+		data[headerLength - 6] = (byte)msgType;
+		data[headerLength - 5] = (byte)flags;
+
 		byteTopicId = new byte[2];
 		if (topicIdType == MqttsMessage.SHORT_TOPIC_NAME)
 			byteTopicId = shortTopicName.getBytes();
 		else if(topicIdType == MqttsMessage.NORMAL_TOPIC_ID){
 			byteTopicId[0] = (byte)((topicId >> 8) & 0xFF);
 			byteTopicId[1] = (byte) (topicId & 0xFF);
-		}else 
-				throw new IllegalArgumentException("Unknown topic id type: " + topicIdType);
-		System.arraycopy(byteTopicId, 0, data, 3, byteTopicId.length);	
-		data[5] = (byte)((msgId >> 8) & 0xFF);
-		data[6] = (byte) (msgId & 0xFF);
-		System.arraycopy(pubData, 0, data, 7, pubData.length);
+		}else
+			throw new IllegalArgumentException("Unknown topic id type: " + topicIdType);
+		System.arraycopy(byteTopicId, 0, data, headerLength - 4, byteTopicId.length);
+		data[headerLength - 2] = (byte)((msgId >> 8) & 0xFF);
+		data[headerLength - 1] = (byte) (msgId & 0xFF);
+		System.arraycopy(pubData, 0, data, headerLength, pubData.length);
 		return data;
 	}
 
