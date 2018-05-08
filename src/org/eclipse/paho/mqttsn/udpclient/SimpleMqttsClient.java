@@ -266,6 +266,10 @@ public class SimpleMqttsClient implements MqttsCallbackPreDefinedTopicId {
 	}
 
 	public void pubCompReceived() {
+		synchronized (this) {
+			waitPubAck = false;
+			notifyAll();
+		}
 	}
 
 	public void registerReceived(int topicId, String topicName) {
