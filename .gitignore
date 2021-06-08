@@ -2,3 +2,6 @@
 bin/
 *.iml
 target/
+build/
+.gradle/
+.vscode/
